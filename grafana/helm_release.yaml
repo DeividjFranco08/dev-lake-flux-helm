@@ -5,9 +5,6 @@ metadata:
   name: grafana
   namespace: grafana
 spec:
-  dependsOn:
-    - name: tempo-repository
-      namespace: tempo-repository
   interval: 5m
   releaseName: grafana
   chart:
