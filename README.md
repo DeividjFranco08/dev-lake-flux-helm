@@ -1,67 +1,72 @@
 # dev-lake-flux-helm
 Repositorio para desplegar componentes en kubernetes por medio de flux
 
+# Despliegue de aplicaciones con Helm Chart: Paso a paso
+Helm es un administrador de paquetes para Kubernetes que simplifica el proceso de empaquetado, instalación y gestión de aplicaciones en clusters de Kubernetes.
 
-# INSTALACIÓN DE DEVLAKE PASO A PASO
-1. Instale la última versión estable con el nombre de la versión devlake
+# Paso 1: Crear un Helm Chart
+Un Helm Chart es un paquete que contiene los recursos de Kubernetes necesarios para desplegar una aplicación. Para crear un Helm Chart, se suele usar la herramienta helm create.
+--helm create <nombre-chart>
+Por ejemplo, para crear un Helm Chart llamado mi-aplicacion, use el siguiente comando:
+--helm create mi-aplicacion
+Esto creará una estructura de directorios para su Helm Chart, incluyendo un archivo Chart.yaml que define la información meta del chart, un directorio templates que contiene los templates para los recursos de Kubernetes, y un archivo values.yaml que contiene los valores por defecto para los templates.
 
-helm repo add devlake https://apache.github.io/incubator-devlake-helm-chart
-helm repo update
-ENCRYPTION_SECRET=$(openssl rand -base64 2000 | tr -dc 'A-Z' | fold -w 128 | head -n 1)
-helm install devlake devlake/devlake --set lake.encryptionSecret.secret=$ENCRYPTION_SECRET
+# Paso 2: Definir los Recursos de Kubernetes
+En el directorio templates de su Helm Chart, cree los archivos YAML que definan los recursos de Kubernetes necesarios para su aplicación. Por ejemplo, si su aplicación necesita un Deployment, cree un archivo deployment.yaml con la siguiente estructura:
 
-2. Instale la última versión de desarrollo con el nombre de la versión:devlake
+YAML
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: <nombre-deployment>
+spec:
+  replicas: <numero-replicas>
+  selector:
+    matchLabels:
+      app: <nombre-aplicacion>
+  template:
+    metadata:
+      labels:
+        app: <nombre-aplicacion>
+    spec:
+      containers:
+      - name: <nombre-contenedor>
+        image: <imagen-docker>
+        ports:
+        - containerPort: <puerto-contenedor>
 
-helm repo add devlake https://apache.github.io/incubator-devlake-helm-chart
-helm repo update
-ENCRYPTION_SECRET=$(openssl rand -base64 2000 | tr -dc 'A-Z' | fold -w 128 | head -n 1)
-helm install devlake devlake/devlake --version=1.0.0-beta6 --set lake.encryptionSecret.secret=$ENCRYPTION_SECRET
 
-Si está utilizando minikube dentro de su Mac, use el siguiente comando para reenviar el puerto:
-kubectl port-forward service/devlake-ui  30090:4000
+# Paso 3: Definir los Valores por Defecto
+En el archivo values.yaml, defina los valores por defecto para los templates. Estos valores pueden ser sobrescritos durante la instalación del Helm Chart. Por ejemplo, para el template deployment.yaml, puede definir los siguientes valores por defecto en values.yaml:
 
-y abrir otra terminal:
-kubectl port-forward service/devlake-grafana  30091:3000
+YAML
+nombre-aplicacion: mi-aplicacion
+nombre-deployment: mi-aplicacion-deployment
+numero-replicas: 3
+imagen-docker: nginx:latest
+puerto-contenedor: 80
 
-A continuación, puedes visitar: config-ui por url grafana por url http://YOUR-NODE-IP:30090http://YOUR-NODE-IP:30091
+# Paso 4: Empaquetar el Helm Chart
+Una vez que haya definido los recursos de Kubernetes y los valores por defecto, puede empaquetar el Helm Chart usando el comando helm package:
+--helm package <nombre-chart>
+Esto creará un archivo .tgz que contiene todos los archivos necesarios para su Helm Chart.
 
-# AGREGAR REPOSITORIOS HELM PASO A PASO
+# Paso 5: Instalar el Helm Chart en un Cluster de Kubernetes
+Para instalar el Helm Chart en un cluster de Kubernetes, use el comando helm install:
+--helm install <nombre-release> <nombre-chart> [options]
+Por ejemplo, para instalar el Helm Chart que empaquetó en el paso anterior, use el siguiente comando:
+--helm install mi-release mi-aplicacion.tgz
+Esto creará los recursos de Kubernetes definidos en el Helm Chart en su cluster de Kubernetes.
 
-1. Agregar el repositorio de Helm:
-helm repo add <nombre-repositorio> <url-repositorio>
+# Paso 6: Actualizar el Helm Chart
+Si necesita realizar cambios en su aplicación, puede actualizar el Helm Chart siguiendo estos pasos:
+Edite los archivos en el directorio templates y/o values.yaml de su Helm Chart.
+Empaquete el Helm Chart actualizado usando el comando helm package.
+Actualice el Helm Chart en su cluster de Kubernetes usando el comando helm upgrade:
+-- helm upgrade <nombre-release> <nombre-chart> [options]
+Esto actualizará los recursos de Kubernetes en su cluster de Kubernetes para que coincidan con la versión actualizada del Helm Chart.
 
-2. Crear un Helm release:
-
-flux create helm release <nombre-release> \
-  --chart <nombre-chart> \
-  --namespace <nombre-namespace> \
-  --values <ruta-archivo-values> \
-  --repository <nombre-repositorio>
-
-3. Aplicar los cambios:
-
-flux reconcile workspaces
-
-# EXPLICACION DE COMANDOS
-
-helm repo add: Este comando se utiliza para agregar el repositorio de Helm que contiene el chart que desea instalar. Reemplace <nombre-repositorio> con un nombre único para el repositorio y <url-repositorio> con la URL del repositorio.
-
-flux create helm release: Este comando se utiliza para crear un Helm release en su clúster de Kubernetes. Reemplace <nombre-release> con el nombre que desea dar al release, <nombre-chart> con el nombre del chart que desea instalar, <nombre-namespace> con el namespace en el que desea instalar el chart, <ruta-archivo-values> con la ruta del archivo helm_values que contiene los valores personalizados para la instalación, y <nombre-repositorio> con el nombre del repositorio que agregó en el paso 1.
-
-flux reconcile workspaces: Este comando se utiliza para aplicar los cambios a su clúster de Kubernetes. Flux reconciliará el estado actual de su clúster con el estado deseado que se define en sus manifests.
-
-# EJEMPLO
-
-Supongamos que tiene un chart de Helm llamado my-chart en un repositorio llamado my-repo ubicado en la URL https://my-repo.example.com. También tiene un archivo helm_values llamado values.yaml que contiene los valores personalizados para la instalación. Para instalar este chart en un namespace llamado default, puede usar los siguientes comandos:
-
-helm repo add my-repo https://my-repo.example.com
-flux create helm release my-release --chart my-chart --namespace default --values values.yaml --repository my-repo
-flux reconcile workspaces
-
-Estos comandos agregarán el repositorio my-repo a su clúster de Kubernetes, crearán un Helm release llamado my-release en el namespace default utilizando el chart my-chart y los valores personalizados en el archivo values.yaml, y luego aplicarán los cambios a su clúster.
-
-Consideraciones adicionales:
-
-Asegúrese de tener Flux instalado y configurado en su clúster de Kubernetes antes de ejecutar estos comandos.
-Si desea instalar un chart de Helm que no está en un repositorio público, deberá agregar el chart a su clúster de Kubernetes antes de poder crear un Helm release.
-Puede encontrar más información sobre Flux en la documentación oficial: https://fluxcd.io/
+# Paso 7: Desinstalar el Helm Chart
+Para desinstalar el Helm Chart de su cluster de Kubernetes, use el comando helm uninstall:
+-- helm uninstall <nombre-release>
+Esto eliminará los recursos de Kubernetes creados por el Helm Chart.
