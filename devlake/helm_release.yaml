@@ -1,0 +1,25 @@
+#https://github.com/apache/incubator-devlake-helm-chart/tree/main
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: devlake
+  namespace: devlake
+spec:
+  dependsOn:
+    - name: grafana
+      namespace: grafana
+  interval: 5m
+  releaseName: devlake
+  chart:
+    spec:
+      chart: devlake
+      version: "0.21.0-beta7"
+      sourceRef:
+        kind: HelmRepository
+        name: devlake
+        namespace: devlake
+      interval: 5m
+  valuesFrom:
+    - kind: ConfigMap
+      name: devlake-helm-chart-value-overrides
+      valuesKey: values.yaml

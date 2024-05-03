@@ -1,0 +1,210 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-helm-chart-value-overrides
+  namespace: grafana
+data:
+  values.yaml: |-
+    env:
+      GRAFANA_MYSQL_PASSWORD: "merico"
+
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+      path: /
+      pathType: Prefix
+      hosts:
+        - "grafana.pd.nttdataco.com"
+      tls:
+      - secretName: grafana-tls
+        hosts:
+          - "grafana.pd.nttdataco.com"
+
+    extraConfigmapMounts:
+      - name: flux-control-plane
+        mountPath: /var/lib/grafana/dashboards/default/flux-control-plane/
+        configMap: flux-control-plane
+      - name: mongo-stats
+        mountPath: /var/lib/grafana/dashboards/default/mongo-stats/
+        configMap: mongo-stats
+      - name: github-devlake-dashboard
+        mountPath: /var/lib/grafana/dashboards/default/github-devlake-dashboard/
+        configMap: github-devlake-dashboard
+      - name: sonarqube-dashboard
+        mountPath: /var/lib/grafana/dashboards/default/sonarqube-dashboard/
+        configMap: sonarqube-dashboard
+      - name: dora-devlake-dashboard
+        mountPath: /var/lib/grafana/dashboards/default/dora-devlake-dashboard/
+        configMap: dora-devlake-dashboard
+
+
+    grafana.ini:
+      feature_toggles:
+        enable: traceToMetrics
+      server:
+        http_listen_port: 3100
+        grpc_listen_port: 9096
+        http_server_read_timeout: 3m
+        http_server_write_timeout: 3m
+
+      query_range:
+        split_queries_by_interval: 0
+        parallelise_shardable_queries: false
+
+      querier:
+        max_concurrent: 2048
+
+      frontend:
+        max_outstanding_per_tenant: 4096
+        compress_responses: true
+
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: default
+            orgId: 1
+            folder:
+            type: file
+            disableDeletion: true
+            editable: false
+            options:
+              path: /var/lib/grafana/dashboards/default
+
+    dashboards:
+      default:
+        dora-devlake-dashboard:
+          file: /var/lib/grafana/dashboards/default/dora-devlake-dashboard/dora-devlake-dashboard.json
+        sonarqube-dashboard:
+          file: /var/lib/grafana/dashboards/default/sonarqube-dashboard/sonarqube-dashboard.json
+        github-devlake-dashboard:
+          file: /var/lib/grafana/dashboards/default/github-devlake-dashboard/github-devlake-dashboard.json
+        flux-stats:
+          gnetId: 16714
+          revision: 1
+        flux-control-plane:
+          file: /var/lib/grafana/dashboards/default/flux-control-plane/flux-control-plane.json
+        cassandra:
+          gnetId: 10849
+          revision: 3
+          datasource:
+          - name: DS_PROMETHEUS
+            value: prometheus
+        mongo-stats:
+          file: /var/lib/grafana/dashboards/default/mongo-stats/mongo-stats.json
+        redis:
+          gnetId: 11835
+          revision: 1
+        k8s-system-api-server:
+          url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-system-api-server.json
+          token: ''
+        k8s-views-global:
+          url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-global.json
+          token: ''
+        k8s-views-namespaces:
+          url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-namespaces.json
+          token: ''
+        k8s-views-nodes:
+          url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-nodes.json
+          token: ''
+        k8s-views-pods:
+          url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/master/dashboards/k8s-views-pods.json
+          token: ''
+        node-exporter:
+          gnetId: 1860
+          revision: 33
+
+    datasources: 
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          uid: loki
+          url: http://loki-repository.loki-repository.svc.cluster.local:3100
+          access: proxy
+          isDefault: false
+          jsonData:
+            httpHeaderName1: 'X-Scope-OrgID'
+            timeout: 60
+            maxLines: 1000
+            derivedFields:
+              - datasourceUid: tempo
+                matcherRegex: "\"traceid\":\"([^\"]+)\""
+                name: TraceID
+                url: '$${__value.raw}'
+                urlDisplayLabel: 'View Trace'
+          secureJsonData:
+            httpHeaderValue1: 'sandbox-org'
+        - name: Tempo
+          uid: tempo
+          type: tempo
+          url: http://tempo-repository.tempo-repository.svc.cluster.local:3100
+          isDefault: false
+          jsonData:
+            tracesToLogsV2:
+              # Field with an internal link pointing to a logs data source in Grafana.
+              # datasourceUid value must match the uid value of the logs data source.
+              datasourceUid: 'loki'
+              spanStartTimeShift: '-1h'
+              spanEndTimeShift: '1h'
+              filterByTraceID: true
+              #filterBySpanID: true
+              tags: [ { key: 'service.name', value: 'job' } ]
+            tracesToMetrics:
+              datasourceUid: 'prometheus'
+              spanStartTimeShift: '1h'
+              spanEndTimeShift: '-1h'
+              #tags: [{ key: 'service.name' }]
+              #queries:
+              #  - name: 'Sample query'
+              #    query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
+            serviceMap:
+              datasourceUid: 'prometheus'
+            nodeGraph:
+              enabled: true
+            search:
+              hide: false
+            lokiSearch:
+              datasourceUid: 'loki'
+            traceQuery:
+              timeShiftEnabled: true
+              spanStartTimeShift: '1h'
+              spanEndTimeShift: '-1h'
+            spanBar:
+              type: 'Tag'
+              tag: 'http.path'
+          access: proxy
+        - uid: prometheus
+          orgId: 1
+          name: Prometheus
+          type: prometheus
+          typeName: Prometheus
+          access: proxy
+          url: http://prometheus-operated.prometheus.svc.cluster.local:9090
+          password: ''
+          user: ''
+          database: ''
+          basicAuth: false
+          isDefault: true
+          readOnly: false
+          editable: true
+        - name: MySQL
+          type: mysql
+          uid: mysql
+          url: devlake-mysql.devlake.svc.cluster.local:3306
+          user: merico
+          jsonData:
+            database: lake
+            maxOpenConns: 100 # Grafana v5.4+
+            maxIdleConns: 100 # Grafana v5.4+
+            maxIdleConnsAuto: true # Grafana v9.5.1+
+            connMaxLifetime: 14400 # Grafana v5.4+
+          secureJsonData:
+            password: ${GRAFANA_MYSQL_PASSWORD}
+
+        deleteDatasources:
+        - name: Loki
+        - name: Tempo
