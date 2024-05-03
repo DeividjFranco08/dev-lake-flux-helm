@@ -11,7 +11,7 @@ data:
     grafana:
       enabled: false
       external:
-        url: "https://grafana.pd.nttdataco.com"
+        url: "https://grafana.pd.davivienda.com"
     lake:
       encryptionSecret:
         secret: "LXVDKQYKJZBRPPGGVXRPIBDZZDPYHSAWNYXUOHPYPNWVWFDGAQONGTCWZNNZXPJSAZZXCZRQSFUSMPLOORWPEDCIUZCKJYRHNGJNJYLOGHJUYKOXSAWHDIANQUGLSCCT"
@@ -21,7 +21,7 @@ data:
       enableHttps: true
       useDefaultNginx: true
       className: "nginx"
-      hostname: "devlake.pd.nttdataco.com"
+      hostname: "devlake.pd.davivienda.com"
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
       tlsSecretName: "devlake-tls"

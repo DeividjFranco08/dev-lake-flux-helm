@@ -1,6 +1,32 @@
 # dev-lake-flux-helm
 Repositorio para desplegar componentes en kubernetes por medio de flux
 
+
+# INSTALACIÓN DE DEVLAKE PASO A PASO
+1. Instale la última versión estable con el nombre de la versión devlake
+
+helm repo add devlake https://apache.github.io/incubator-devlake-helm-chart
+helm repo update
+ENCRYPTION_SECRET=$(openssl rand -base64 2000 | tr -dc 'A-Z' | fold -w 128 | head -n 1)
+helm install devlake devlake/devlake --set lake.encryptionSecret.secret=$ENCRYPTION_SECRET
+
+2. Instale la última versión de desarrollo con el nombre de la versión:devlake
+
+helm repo add devlake https://apache.github.io/incubator-devlake-helm-chart
+helm repo update
+ENCRYPTION_SECRET=$(openssl rand -base64 2000 | tr -dc 'A-Z' | fold -w 128 | head -n 1)
+helm install devlake devlake/devlake --version=1.0.0-beta6 --set lake.encryptionSecret.secret=$ENCRYPTION_SECRET
+
+Si está utilizando minikube dentro de su Mac, use el siguiente comando para reenviar el puerto:
+kubectl port-forward service/devlake-ui  30090:4000
+
+y abrir otra terminal:
+kubectl port-forward service/devlake-grafana  30091:3000
+
+A continuación, puedes visitar: config-ui por url grafana por url http://YOUR-NODE-IP:30090http://YOUR-NODE-IP:30091
+
+# AGREGAR REPOSITORIOS HELM PASO A PASO
+
 1. Agregar el repositorio de Helm:
 helm repo add <nombre-repositorio> <url-repositorio>
 
@@ -16,7 +42,7 @@ flux create helm release <nombre-release> \
 
 flux reconcile workspaces
 
-EXPLICACIÓN DE COMANDOS
+# EXPLICACION DE COMANDOS
 
 helm repo add: Este comando se utiliza para agregar el repositorio de Helm que contiene el chart que desea instalar. Reemplace <nombre-repositorio> con un nombre único para el repositorio y <url-repositorio> con la URL del repositorio.
 
@@ -24,7 +50,7 @@ flux create helm release: Este comando se utiliza para crear un Helm release en 
 
 flux reconcile workspaces: Este comando se utiliza para aplicar los cambios a su clúster de Kubernetes. Flux reconciliará el estado actual de su clúster con el estado deseado que se define en sus manifests.
 
-EJEMPLO
+# EJEMPLO
 
 Supongamos que tiene un chart de Helm llamado my-chart en un repositorio llamado my-repo ubicado en la URL https://my-repo.example.com. También tiene un archivo helm_values llamado values.yaml que contiene los valores personalizados para la instalación. Para instalar este chart en un namespace llamado default, puede usar los siguientes comandos:
 
