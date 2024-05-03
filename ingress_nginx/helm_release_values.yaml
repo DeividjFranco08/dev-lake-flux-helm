@@ -10,10 +10,18 @@ data:
         externalTrafficPolicy: Local
         annotations:
           service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/healthz"
-      opentelemetry:
-        enabled: true
+          service.beta.kubernetes.io/load-balancer-internal: "true"
+          service.kubernetes.io/cluster-service-endpoint: "true"
+          service.kubernetes.io/service-proxy-name: "nginx-ingress-controller"
+          service.spec.loadBalancerClass: "internal"
+# Asignar la subred específica al balanceador de carga interno
+          subnets:
+            - "192.168.100.0/24"
+# que quede como balanceador de carga interno en la s net que aprobiciona mauro y jessica
+# balanceador de carga en la subnet que se va asignar 
+
       config: 
-        enable-opentelemetry: "true"
+        
         otlp-collector-host: "main-collector-collector.main-collector.svc.cluster.local"
         otlp-collector-port: "4317"
         otel-max-queuesize: "2048"
@@ -23,6 +31,3 @@ data:
         otel-sampler: "AlwaysOn"
         otel-sampler-ratio: "1.0"
         otel-sampler-parent-based: "false"
-        opentelemetry-config: "/etc/nginx/opentelemetry.toml"
-        opentelemetry-operation-name: "HTTP $request_method $service_name $uri"
-        opentelemetry-trust-incoming-span: "true"
