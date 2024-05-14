@@ -36,3 +36,11 @@ helm template ingress-nginx ingress-nginx/ingress-nginx --version "4.9.1" -f ./i
 
 
 ## Install grafana
+
+```bash
+helm repo add ingress-nginx https://grafana.github.io/helm-charts
+helm repo update
+```
+```bash
+helm upgrade -f ./grafana/values.yaml grafana/grafana --version "7.3.0" --create-namespace --namespace "grafana"
+```

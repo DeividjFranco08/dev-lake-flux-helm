@@ -99,16 +99,3 @@ data:
             connMaxLifetime: 14400 # Grafana v5.4+
           secureJsonData:
             password: ${GRAFANA_POSTGRES_PASSWORD}
-    auth:
-      ldap:
-        enabled: true
-        servers:
-          - ldap://ldap.example.com:389
-        base_dn: "dc=example,dc=com"
-        username_attribute: "cn"
-        email_attribute: "mail"
-        group_dn: "cn=grafana-users,ou=groups,dc=example,dc=com"
-        group_attribute: "cn"
-        # Optional TLS settings
-        # tls_ca_file: "/path/to/ca.crt"
-        # tls_require_cert: true
