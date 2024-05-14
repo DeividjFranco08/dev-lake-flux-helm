@@ -18,9 +18,6 @@ data:
           - "grafana.pd.davivienda.com"
 
     extraConfigmapMounts:
-      - name: flux-control-plane
-        mountPath: /var/lib/grafana/dashboards/default/flux-control-plane/
-        configMap: flux-control-plane
       - name: mongo-stats
         mountPath: /var/lib/grafana/dashboards/default/mongo-stats/
         configMap: mongo-stats
