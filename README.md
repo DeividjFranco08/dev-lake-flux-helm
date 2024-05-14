@@ -20,9 +20,16 @@ helm repo update
 ```bash
 helm install -f ./ingress_nginx/values.yaml ingress-nginx ingress-nginx/ingress-nginx --version "4.9.1" --create-namespace --namespace "ingress-nginx"
 ```
+
 ### Upgrade if required
 ```bash
 helm upgrade -f ./ingress_nginx/values.yaml ingress-nginx ingress-nginx/ingress-nginx --version "4.9.1" --create-namespace --namespace "ingress-nginx"
 ```
+
+### Get temnplates
+```bash
+helm template ingress-nginx ingress-nginx/ingress-nginx --version "4.9.1" -f ./ingress_nginx/values.yaml > mysql-manifest.yaml
+```
+
 
 ## Install grafana
