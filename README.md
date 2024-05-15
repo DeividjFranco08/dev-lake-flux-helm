@@ -25,6 +25,7 @@ helm install -f ./ingress_nginx/values.yaml ingress-nginx ingress-nginx/ingress-
 ```
 
 ### Upgrade if required
+comando para actualizar o re despliegue el servicio que ya se instalo 
 ```bash
 helm upgrade -f ./ingress_nginx/values.yaml ingress-nginx ingress-nginx/ingress-nginx --version "4.9.1" --create-namespace --namespace "ingress-nginx"
 ```
@@ -42,5 +43,5 @@ helm repo add ingress-nginx https://grafana.github.io/helm-charts
 helm repo update
 ```
 ```bash
-helm upgrade -f ./grafana/values.yaml grafana/grafana --version "7.3.0" --create-namespace --namespace "grafana"
+helm install -f ./grafana/values.yaml grafana/grafana --version "7.3.0" --create-namespace --namespace "grafana"
 ```
